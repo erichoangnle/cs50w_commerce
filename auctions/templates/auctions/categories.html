@@ -1,0 +1,12 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <div class="d-flex" style="justify-content: center;"><h2>Categories</h2></div>
+    <br><br>
+    <ul>
+        {% for item in categories %}
+            <li><a href="{% url 'category_listings' item %}">{{ item }}</a></li>
+        {% endfor %}
+    </ul>
+    
+{% endblock %}
