@@ -11,6 +11,9 @@ from .models import User
 
 
 def index(request):
+    """
+    Render all active listings in database and sort by time created.
+    """
     listings = Listing.objects.filter(status="active").order_by("-time")
     return render(request, "auctions/index.html", {
         'listings': listings
@@ -18,6 +21,9 @@ def index(request):
 
 
 def login_view(request):
+    """
+    User log in.
+    """
     if request.method == "POST":
 
         # Attempt to sign user in
@@ -38,11 +44,17 @@ def login_view(request):
 
 
 def logout_view(request):
+    """
+    User log out.
+    """
     logout(request)
     return HttpResponseRedirect(reverse("index"))
 
 
 def register(request):
+    """
+    Register new user.
+    """
     if request.method == "POST":
         username = request.POST["username"]
         email = request.POST["email"]
@@ -71,6 +83,12 @@ def register(request):
 
 @login_required
 def add_listing(request):
+    """
+    If request method is POST, create a new listing according to user's
+    inputs, save new listing to database, and redirect user to newly
+    created listing page. If request method is GET, render add listing
+    form.
+    """
     if request.method == "POST":
         if request.POST["title"] and request.POST["starting_bid"] and request.POST["category"]:
             listing = Listing(
@@ -91,6 +109,13 @@ def add_listing(request):
 
 
 def listing_page(request, id):
+    """
+    Page template for individual listing. If request method is GET,
+    render lsting informations, listing image, and listing comments
+    if any. If request method is POST, user has entered a comment
+    on this listing. Save comment to database and redirect user to
+    the same listing page with new comment added.
+    """
     if request.method == "POST":
         comment = Comment(
             op = request.user,
@@ -112,6 +137,11 @@ def listing_page(request, id):
 
 @login_required
 def bid(request, item_id):
+    """
+    Process user's bid on listing. There is no HTML template for this function.
+    If bid is valid, save bid to database and redirect user to the same listing
+    page. If bid is not valid, render the same listing page with an error message.
+    """
     if request.method == 'POST':
         item = Listing.objects.get(pk=item_id)
         bids = Bid.objects.filter(item=item).order_by('-bid')
@@ -141,6 +171,11 @@ def bid(request, item_id):
 
 @login_required
 def close_listing(request, id):
+    """
+    User can onlye access this function if he/she is the creator of a listing.
+    Change the listing status from active to closed. Whoever has the highest
+    bid on said listing will be the winner.
+    """
     item = Listing.objects.get(pk=id)
     bids = Bid.objects.filter(item=item).order_by('-bid')
     item.status = 'closed'
@@ -157,6 +192,9 @@ def close_listing(request, id):
 
 @login_required
 def won(request, id):
+    """
+    Render a template with all items won by user.
+    """
     user = User.objects.get(pk=id)
     listings = user.won.all()
     return render(request, "auctions/won.html", {
@@ -166,6 +204,11 @@ def won(request, id):
 
 @login_required
 def add_to_watchlist(request, listing_id):
+    """
+    This function is only accessible to user who is not the creator of a
+    listing. It will add current listing to user's watchlist and redirect
+    user to Watchlist page.
+    """
     user = User.objects.get(pk=request.user.id)
     item = Listing.objects.get(pk=listing_id)
     watchlist = Watchlist(user = user, item = item)
@@ -175,6 +218,9 @@ def add_to_watchlist(request, listing_id):
 
 @login_required
 def watchlist(request, user_id):
+    """
+    Render a watchlist page with all listing user currently have in watchlist.
+    """
     user = User.objects.get(pk=user_id)
     listings = user.watchlist.all()
     return render(request, "auctions/watchlist.html", {
@@ -184,12 +230,18 @@ def watchlist(request, user_id):
 
 @login_required
 def delete_watchlist(request, item_id):
+    """
+    Delete an item from user's watchlist.
+    """
     item = Watchlist.objects.get(item=item_id)
     item.delete()
     return HttpResponseRedirect(f"/watchlist/{request.user.id}")
 
 
 def categories(request):
+    """
+    Render a page that list all categories with active listings.
+    """
     categories = Listing.objects.filter(status='active').values_list("category", flat=True).distinct()
     return render(request, "auctions/categories.html", {
         'categories': categories
@@ -197,6 +249,9 @@ def categories(request):
 
 
 def category_listings(request, name):
+    """
+    Render a page that display only listings in a certain category.
+    """
     listings = Listing.objects.filter(status='active', category=name)
     return render(request, "auctions/category_listings.html", {
         'listings': listings,
