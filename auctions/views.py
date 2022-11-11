@@ -68,6 +68,7 @@ def register(request):
     else:
         return render(request, "auctions/register.html")
 
+
 @login_required
 def add_listing(request):
     if request.method == "POST":
@@ -88,6 +89,7 @@ def add_listing(request):
     else:
         return render(request, "auctions/add_listing.html")
 
+
 def listing_page(request, id):
     if request.method == "POST":
         comment = Comment(
@@ -106,6 +108,7 @@ def listing_page(request, id):
             'listing': Listing.objects.get(pk=id),
             'comments': comments
         })
+
 
 @login_required
 def bid(request, item_id):
@@ -126,9 +129,15 @@ def bid(request, item_id):
             )
             bid.save()
             item.current_price = new_bid
-            item.save()         
-        
-        return HttpResponseRedirect(f"/listing_page/{item_id}")
+            item.save()           
+            return HttpResponseRedirect(f"/listing_page/{item_id}")
+        else:
+            return render(request, "auctions/listing_page.html", {
+                'listing': Listing.objects.get(pk=item_id),
+                'comments': Comment.objects.filter(item=item),
+                'error_message': 'Invalid bid!'
+            })
+
 
 @login_required
 def close_listing(request, id):
@@ -145,6 +154,7 @@ def close_listing(request, id):
         won.save()
     return HttpResponseRedirect(reverse("index"))
 
+
 @login_required
 def won(request, id):
     user = User.objects.get(pk=id)
@@ -152,6 +162,7 @@ def won(request, id):
     return render(request, "auctions/won.html", {
         'listings': listings
     })
+
 
 @login_required
 def add_to_watchlist(request, listing_id):
@@ -161,6 +172,7 @@ def add_to_watchlist(request, listing_id):
     watchlist.save()
     return HttpResponseRedirect(f"/watchlist/{user.id}")
 
+
 @login_required
 def watchlist(request, user_id):
     user = User.objects.get(pk=user_id)
@@ -169,17 +181,20 @@ def watchlist(request, user_id):
         'listings': listings
     })
 
+
 @login_required
 def delete_watchlist(request, item_id):
     item = Watchlist.objects.get(item=item_id)
     item.delete()
     return HttpResponseRedirect(f"/watchlist/{request.user.id}")
 
+
 def categories(request):
     categories = Listing.objects.filter(status='active').values_list("category", flat=True).distinct()
     return render(request, "auctions/categories.html", {
         'categories': categories
     })
+
 
 def category_listings(request, name):
     listings = Listing.objects.filter(status='active', category=name)

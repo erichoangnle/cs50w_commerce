@@ -13,7 +13,7 @@ class Listing(models.Model):
     current_price = models.IntegerField(null=True)
     image = models.CharField(max_length=200)
     status = models.CharField(max_length=6)
-    time = models.TimeField(null=True)
+    time = models.DateTimeField(null=True)
     category = models.CharField(max_length=100, null=True)
 
     def __str__(self):
